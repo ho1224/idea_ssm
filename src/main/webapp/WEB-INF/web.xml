@@ -1,9 +1,67 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<web-app xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://java.sun.com/xml/ns/javaee" xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_3_0.xsd" version="3.0">
-  <display-name>helloworld</display-name>
-  <!-- 配置编码方式-->
+<web-app xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xmlns="http://java.sun.com/xml/ns/javaee"
+         xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd"
+         version="2.5">
+  <display-name>permission</display-name>
+  <!-- Spring初始化 -->
+  <listener>
+    <listener-class>org.springframework.web.context.ContextLoaderListener</listener-class>
+  </listener>
+  <context-param>
+    <param-name>contextConfigLocation</param-name>
+    <param-value>classpath*:applicationContext*.xml</param-value>
+  </context-param>
+
+  <context-param>
+    <param-name>spring.profiles.active</param-name>
+    <param-value>dev</param-value>
+  </context-param>
+  <context-param>
+    <param-name>spring.profiles.default</param-name>
+    <param-value>dev</param-value>
+  </context-param>
+  <context-param>
+    <param-name>spring.liveBeansView.mbeanDomain</param-name>
+    <param-value>dev</param-value>
+  </context-param>
+
+  <!-- shiro过滤器 -->
   <filter>
-    <filter-name>encodingFilter</filter-name>
+    <filter-name>shiroFilter</filter-name>
+    <filter-class>org.springframework.web.filter.DelegatingFilterProxy</filter-class>
+  </filter>
+  <filter-mapping>
+    <filter-name>shiroFilter</filter-name>
+    <url-pattern>*.html</url-pattern>
+    <url-pattern>*</url-pattern>
+  </filter-mapping>
+
+  <servlet-mapping>
+    <servlet-name>default</servlet-name>
+    <url-pattern>*.html</url-pattern>
+    <url-pattern>/adminjs/*</url-pattern>
+    <url-pattern>/css/*</url-pattern>
+    <url-pattern>/images/*</url-pattern>
+    <url-pattern>/js/*</url-pattern>
+    <url-pattern>/ui/*</url-pattern>
+  </servlet-mapping>
+  <!-- springmvc初始化 -->
+  <servlet>
+    <servlet-name>springmvc</servlet-name>
+    <servlet-class>org.springframework.web.servlet.DispatcherServlet</servlet-class>
+    <init-param>
+      <param-name>contextConfigLocation</param-name>
+      <param-value>classpath:springmvc.xml</param-value>
+    </init-param>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>springmvc</servlet-name>
+    <url-pattern>/</url-pattern>
+  </servlet-mapping>
+  <!-- post请求utf-8编码 -->
+  <filter>
+    <filter-name>characterEncodingFilter</filter-name>
     <filter-class>org.springframework.web.filter.CharacterEncodingFilter</filter-class>
     <init-param>
       <param-name>encoding</param-name>
@@ -15,58 +73,51 @@
     </init-param>
   </filter>
   <filter-mapping>
-    <filter-name>encodingFilter</filter-name>
+    <filter-name>characterEncodingFilter</filter-name>
     <url-pattern>/*</url-pattern>
   </filter-mapping>
 
-
-  <!-- 配置springmvc的前端控制器 指向spring-mvc.xml 程序在启动的时候就加载springmvc 可以接受所有请求 load-on-startup：表示启动容器时初始化该Servlet； -->
+  <!-- druid监控 -->
   <servlet>
-    <servlet-name>springServlet</servlet-name>
-    <servlet-class>org.springframework.web.servlet.DispatcherServlet</servlet-class>
-    <!-- 可以自定义servlet.xml配置文件的位置和名称， 默认为WEB-INF目录下，名称为[<servlet-name>]-servlet.xml，如spring-servlet.xml -->
-    <init-param>
-      <param-name>contextConfigLocation</param-name>
-      <param-value> classpath:spring/applicationContext.xml</param-value>
-    </init-param>
-    <load-on-startup>1</load-on-startup>
+    <servlet-name>DruidStatView</servlet-name>
+    <servlet-class>com.alibaba.druid.support.http.StatViewServlet</servlet-class>
   </servlet>
-  <!-- 将前端URL请求和后台处理方法controller建立对应关系-->
   <servlet-mapping>
-    <servlet-name>springServlet</servlet-name>
-    <url-pattern>/</url-pattern>
+    <servlet-name>DruidStatView</servlet-name>
+    <url-pattern>/druid/*</url-pattern>
   </servlet-mapping>
 
-  <!-- Spring配置 -->
-  <listener>
-    <listener-class>
-      org.springframework.web.context.ContextLoaderListener
-    </listener-class>
-  </listener>
-  <!-- 取消对某一类文件的拦截-->
-  <servlet-mapping>
-    <servlet-name>default</servlet-name>
-    <url-pattern>*.md</url-pattern>
-  </servlet-mapping>
+  <!-- 添加Web应用等监控 -->
+  <filter>
+    <filter-name>DruidWebStatFilter</filter-name>
+    <filter-class>com.alibaba.druid.support.http.WebStatFilter</filter-class>
+    <init-param>
+      <param-name>exclusions</param-name>
+      <param-value>*.js,*.gif,*.jpg,*.png,*.css,*.ico,/druid/*</param-value>
+    </init-param>
+    <init-param>
+      <param-name>profileEnable</param-name>
+      <param-value>true</param-value>
+    </init-param>
+    <init-param>
+      <param-name>principalCookieName</param-name>
+      <param-value>USER_COOKIE</param-value>
+    </init-param>
+    <init-param>
+      <param-name>principalSessionName</param-name>
+      <param-value>USER_SESSION</param-value>
+    </init-param>
+  </filter>
+  <filter-mapping>
+    <filter-name>DruidWebStatFilter</filter-name>
+    <url-pattern>/*</url-pattern>
+  </filter-mapping>
 
-  <context-param>
-    <param-name>contextConfigLocation</param-name>
-    <param-value> classpath:spring/applicationContext.xml</param-value>
-  </context-param>
-  <!-- 欢迎页面-->
-<!--  <welcome-file-list>
-  <welcome-file>/WEB-INF/index.jsp</welcome-file>
-</welcome-file-list>-->
   <welcome-file-list>
-    <welcome-file>/index.jsp</welcome-file>
+    <welcome-file>login.html</welcome-file>
+    <welcome-file>index.html</welcome-file>
+    <welcome-file>default.html</welcome-file>
+    <welcome-file>default.htm</welcome-file>
+    <welcome-file>default.jsp</welcome-file>
   </welcome-file-list>
-  <!--404错误展示页面，可自行配置-->
-  <!--<error-page>-->
-  <!--<error-code>404</error-code>-->
-  <!--<location>/WEB-INF/views/404.jsp</location>-->
-  <!--</error-page>-->
-  <!--设置session失效时间为30分钟 -->
-  <session-config>
-    <session-timeout>600</session-timeout>
-  </session-config>
 </web-app>
